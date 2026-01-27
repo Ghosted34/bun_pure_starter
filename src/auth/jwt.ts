@@ -6,7 +6,7 @@ export async function signToken({payload, time, secret}:{payload: any, time:stri
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("15m")
+    .setExpirationTime(time)
     .sign(new TextEncoder().encode(secret));
 }
 

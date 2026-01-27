@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { redis } from "../../config/redis";
 import { signToken } from "./jwt";
 
@@ -13,4 +14,14 @@ export async function issueTokens(userId: number) {
   );
 
   return { accessToken, refreshToken };
+}
+
+
+
+export function hashPassword(password: string) {
+  return bcrypt.hash(password, 10);
+}
+
+export function verifyPassword(password: string, hash: string) {
+  return bcrypt.compare(password, hash);
 }
