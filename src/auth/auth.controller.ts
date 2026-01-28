@@ -1,22 +1,52 @@
-import { signToken } from "./jwt";
-import { json } from "../utils/helper";
-import { config } from "../config";
+import type { Ctx } from "../types/base";
+import { error, json } from "../utils/helper";
+import { login, logout, refresh, register } from "./auth.service";
+import type { AuthEntity } from "./types";
 
-export async function loginHandler(req: Request) {
-  // @ts-ignore
-  const { email } = req.body;
+export const AuthController = {
+  register: async (req: Request) => {
+    try {
+      const {
+        full_name = "",
+        email,
+        password,
+        role = undefined,
+      } = (await req.json()) as AuthEntity;
+      const user = await register({ full_name, email, password, role });
+      return json(user, 201);
+    } catch (err: any) {
+      return error(400, err.message);
+    }
+  },
 
-  // mock user for now
-  const token = await signToken({ payload: { userId: 1, email }, time: config.jwt.expiry, secret: config.jwt.secret });
+  login: async (req: Request) => {
+    try {
+      const { email, password } = (await req.json()) as AuthEntity;
+      const tokens = await login({ email, password });
+      return json(tokens);
+    } catch (err: any) {
+      return error(401, err.message);
+    }
+  },
 
-  return json({ accessToken: token });
-}
+  refresh: async (req: Request) => {
+    try {
+      const { refresh_token } = (await req.json()) as { refresh_token: string };
+      const token = await refresh(refresh_token);
+      return json(token);
+    } catch (err: any) {
+      return error(401, err.message);
+    }
+  },
 
-export async function meHandler(req: Request) {
-  // @ts-ignore
-  return json({ user: req.user });
-}
-export async function refreshHandler(req: Request) {
-  // @ts-ignore
-  return json({ user: req.user });
-}
+  logout: async (req: Request, ctx: Ctx) => {
+    try {
+      const { refresh_token } = (await req.json()) as { refresh_token: string };
+
+      await logout({ access_token: ctx.token, refresh_token });
+      return json({ ok: true });
+    } catch (err: any) {
+      return error(400, err.message);
+    }
+  },
+};

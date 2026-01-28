@@ -1,23 +1,30 @@
+// src/router.ts
 import { compose } from "./src/middleware/compose";
+import type { Ctx, Handler, Middleware } from "./src/types/base";
 
-type Handler = (req: Request) => Promise<Response> | Response;
 
 const routes = new Map<string, Handler>();
 
-export function registerRoute(
+export function registerRoute<M extends Middleware[]>(
   method: string,
   path: string,
-  handlers: Handler[]
+  ...handlers: [...M, Handler]
 ) {
-  routes.set(`${method} ${path}`, compose(...handlers));
+  if (handlers.length === 0) throw new Error("No handlers provided");
+  routes.set(`${method.toUpperCase()} ${path}`, compose(...handlers));
 }
 
-export async function router(req: Request) {
+export async function router(req: Request): Promise<Response> {
   const url = new URL(req.url);
-  const key = `${req.method} ${url.pathname}`;
+  const key = `${req.method.toUpperCase()} ${url.pathname}`;
 
   const handler = routes.get(key);
-  return handler
-    ? handler(req)
-    : new Response("Not Found", { status: 404 });
+  if (!handler) return new Response("Not Found", { status: 404 });
+
+  const ctx: Ctx = {
+    traceId: crypto.randomUUID(),
+    startTime: Date.now(),
+  };
+
+  return handler(req, ctx);
 }

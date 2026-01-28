@@ -1,7 +1,11 @@
+import type { Generated } from "kysely";
+
 export interface Database {
   users: {
-    id: number;
+    id: Generated<string>;
+    full_name: string;
     email: string;
-    password_hash: string;
+    pwd_hash: string;
+    role?: string;
   };
 }

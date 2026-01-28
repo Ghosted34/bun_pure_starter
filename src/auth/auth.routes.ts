@@ -1,25 +1,16 @@
+import { metrics } from "../../config/metrics";
+import { tracing } from "../../config/tracing";
 import { registerRoute } from "../../router";
-import { jsonMiddleware } from "../middleware/json.middleware";
-import { authMiddleware } from "../middleware/authentication";
-import {
-  loginHandler,
-  refreshHandler,
-  meHandler,
-} from "./auth.controller";
+import { authentication } from "../middleware/authentication";
+import { AuthController } from "./auth.controller";
+
 
 export function registerAuthRoutes() {
-  registerRoute("POST", "/auth/login", [
-    jsonMiddleware,
-    loginHandler,
-  ]);
+ // Public
+registerRoute("POST", "/api/v1/register", tracing, metrics, AuthController.register);
+registerRoute("POST", "/api/login", tracing, metrics, AuthController.login);
+registerRoute("POST", "/refresh", tracing, metrics, AuthController.refresh);
 
-  registerRoute("POST", "/auth/refresh", [
-    jsonMiddleware,
-    refreshHandler,
-  ]);
-
-  registerRoute("GET", "/auth/me", [
-    authMiddleware,
-    meHandler,
-  ]);
+// Protected
+registerRoute("POST", "/logout", tracing, metrics, authentication, AuthController.logout);
 }
