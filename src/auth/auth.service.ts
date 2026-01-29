@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import { db } from "../../config/db";
 import { signToken, verifyToken } from "./jwt";
 import { config } from "../config";
@@ -34,7 +33,7 @@ export async function login({
 }) {
   const user = await db
     .selectFrom("users")
-    .selectAll()
+    .select(["id", "email", "full_name", "role", "pwd_hash"])
     .where("email", "=", email)
     .executeTakeFirst();
 
@@ -43,7 +42,7 @@ export async function login({
   const ok = await verifyPassword(password, user.pwd_hash);
   if (!ok) throw new Error("Invalid credentials");
 
-  const access_token = signToken({
+  const access_token = await signToken({
     payload: {
       sub: user.id,
       full_name: user.full_name,
@@ -54,7 +53,7 @@ export async function login({
     secret: config.jwt.secret,
   });
 
-  const refresh_token = signToken({
+  const refresh_token = await signToken({
     payload: {
       sub: user.id,
       full_name: user.full_name,
@@ -134,7 +133,7 @@ export async function logout({
   await revoke(access_token, 900);
 
   if (refresh_token) {
-    await revoke(access_token, 900);
+    await revoke(refresh_token, 900);
   }
 
   return { message: "Logged out" };
@@ -144,10 +143,13 @@ export async function logout({
 // Helper Functions
 // ============================================
 
-export function hashPassword(password: string) {
-  return bcrypt.hash(password, 12);
+export async function hashPassword(password: string) {
+  return await Bun.password.hash(password, {
+    algorithm: "bcrypt",
+    cost: 10,
+  });
 }
 
-export function verifyPassword(password: string, hash: string) {
-  return bcrypt.compare(password, hash);
+export async function verifyPassword(password: string, hash: string) {
+  return await Bun.password.verify(password, hash);
 }

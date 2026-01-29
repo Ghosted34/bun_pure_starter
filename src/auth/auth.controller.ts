@@ -43,7 +43,7 @@ export const AuthController = {
     try {
       const { refresh_token } = (await req.json()) as { refresh_token: string };
 
-      await logout({ access_token: ctx.token, refresh_token });
+      await logout({ access_token: ctx.token || "", refresh_token });
       return json({ ok: true });
     } catch (err: any) {
       return error(400, err.message);

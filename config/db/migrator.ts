@@ -22,13 +22,11 @@ export class Migrator {
     private db: Kysely<any>,
     private migrationsDir: string,
     private databaseName: string,
-  ) {
-  
-  }
-   async init() {
+  ) {}
+  async init() {
     if (this.initialized) return;
 
-    await ensureDatabase(config.psql.url||'');
+    await ensureDatabase(config.psql.url || "");
     this.initialized = true;
   }
 
@@ -88,6 +86,7 @@ export class Migrator {
   /* ---------------------------------- */
 
   async runMigrations() {
+    console.log("Ensuring Database Exist");
     await this.ensureMigrationsTable();
 
     const files = await this.getMigrationFiles();

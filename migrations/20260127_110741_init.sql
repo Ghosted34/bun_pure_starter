@@ -5,8 +5,9 @@
 -- Write schema changes here
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
+  full_name TEXT,
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  pwd_hash TEXT NOT NULL,
   role TEXT DEFAULT 'user',
   created_at TIMESTAMP DEFAULT now()
 );
